@@ -1,4 +1,4 @@
-name: CI
+name: CI/CD
 
 on:
   push:
@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   test:
-    name: Testes e build
+    name: Testes
     runs-on: ubuntu-latest
 
     steps:
@@ -32,5 +32,37 @@ jobs:
       - name: Executar testes
         run: npm test
 
-      - name: Construir imagem Docker
-        run: docker build --tag node-docker-api:${{ github.sha }} .
+      - name: Validar build Docker
+        run: docker build --tag node-docker-api:test .
+
+  publish:
+    name: Publicar imagem
+    needs: test
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v7
+
+      - name: Autenticar no GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Construir e publicar imagem
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/davidmatheussouza/node-docker-api:latest
+            ghcr.io/davidmatheussouza/node-docker-api:${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
