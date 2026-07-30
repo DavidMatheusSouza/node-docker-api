@@ -1,0 +1,11 @@
+services:
+  api:
+    build:
+      context: .
+    image: node-docker-api:1.0
+    container_name: node-api
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
