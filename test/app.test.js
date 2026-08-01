@@ -40,3 +40,22 @@ test("GET /health informa que a API está saudável", async () => {
     server.close();
   }
 });
+
+test("GET /metrics expõe métricas do Prometheus", async () => {
+  const server = await startServer();
+
+  try {
+    const { port } = server.address();
+    const response = await fetch(`http://127.0.0.1:${port}/metrics`);
+    const body = await response.text();
+
+    assert.equal(response.status, 200);
+    assert.match(
+      response.headers.get("content-type"),
+      /text\/plain/
+    );
+    assert.match(body, /process_resident_memory_bytes/);
+  } finally {
+    server.close();
+  }
+});
