@@ -4,7 +4,10 @@ const os = require("os");
 const app = express();
 
 app.get("/", (req, res) => {
-  res.json({ message: "API Node.js executando com Docker!" });
+  res.json({
+    message: "Deploy automático funcionando!",
+    version: "1.1.0"
+  });
 });
 
 app.get("/health", (req, res) => {

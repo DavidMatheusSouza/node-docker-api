@@ -17,7 +17,8 @@ test("GET / retorna a mensagem da API", async () => {
     const body = await response.json();
 
     assert.equal(response.status, 200);
-    assert.equal(body.message, "API Node.js executando com Docker!");
+    assert.equal(body.message, "Deploy automático funcionando!");
+    assert.equal(body.version, "1.1.0");
   } finally {
     server.close();
   }
