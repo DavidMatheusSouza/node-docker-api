@@ -66,3 +66,43 @@ jobs:
             ghcr.io/davidmatheussouza/node-docker-api:${{ github.sha }}
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+  deploy:
+    name: Deploy na VM
+    needs: publish
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: self-hosted
+
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v7
+
+      - name: Autenticar no GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Atualizar aplicação
+        run: |
+          docker compose pull
+          docker compose up -d --remove-orphans
+
+      - name: Verificar saúde da API
+        run: |
+          for tentativa in {1..12}; do
+            if curl --fail --silent http://127.0.0.1:3000/health; then
+              echo "API está saudável"
+              exit 0
+            fi
+
+            echo "Aguardando a API..."
+            sleep 5
+          done
+
+          docker compose logs --tail=100 api
+          exit 1
